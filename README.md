@@ -81,7 +81,7 @@ npm test              # typecheck → unit → e2e, cheapest first
 - [x] **P0** — Repo skeleton: strict TS, Vitest, Playwright, CI pipeline
 - [x] **P1** — Domain core: money, claim state machine, validators — 62 unit tests, 100% coverage, 90% floor enforced
 - [x] **P2** — Fastify API + Postgres + generated OpenAPI spec *(claims endpoints land with auth in P3–P4)*
-- [ ] **P2.5** — Docker: multi-stage image, compose, Trivy scan
+- [x] **P2.5** — Docker: multi-stage image (non-root, healthchecked, npm-free runtime), compose profile, Trivy gate
 - [x] **P3** — Auth + fixture graph: worker tenants, per-role contexts, IDOR + refresh-rotation suites *(browser storageStates join in P6)*
 - [x] **P4** — Full API suite: lifecycle, pagination, double-approve race, contract drift gate
 - [ ] **P5** — React UI (4 screens), typed client generated from the spec
