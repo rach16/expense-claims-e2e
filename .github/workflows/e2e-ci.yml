@@ -43,6 +43,12 @@ jobs:
 
       - run: npm run typecheck
 
+      # the committed OpenAPI spec must match what the code generates
+      - name: Contract drift gate
+        run: |
+          npm run openapi:generate --workspace @expense-claims/api
+          git diff --exit-code apps/api/openapi/openapi.json
+
       - run: npm run test:unit
 
       - name: Apply database migrations

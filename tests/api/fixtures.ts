@@ -157,6 +157,25 @@ export const test = base.extend<Record<never, never>, ApiWorkerFixtures>({
 
 export { expect } from '@playwright/test'
 
+/**
+ * Create a brand-new user in the admin's tenant and return an authenticated
+ * context for them — for tests that must own ALL data they can see (e.g.
+ * pagination counts).
+ */
+export async function newIsolatedUser(
+  asAdmin: APIRequestContext,
+  role: 'submitter' | 'approver',
+): Promise<APIRequestContext> {
+  const email = `isolated-${role}-${Date.now()}-${Math.floor(Math.random() * 1e6)}@test.local`
+  const created = await asAdmin.post('/users', {
+    data: { email, password: PASSWORD, role },
+  })
+  if (created.status() !== 201) {
+    throw new Error(`isolated user creation failed: ${created.status()}`)
+  }
+  return loginContext(email)
+}
+
 /** claim builder for API tests — same vocabulary as the unit-test builders */
 export function aClaimBody(overrides: Partial<{ title: string; items: unknown[] }> = {}) {
   return {

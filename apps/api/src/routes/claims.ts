@@ -1,9 +1,11 @@
 import { Type } from '@sinclair/typebox'
-import { eq } from 'drizzle-orm'
+import { and, count, desc, eq, inArray } from 'drizzle-orm'
 import type { AppInstance } from '../types.js'
-import { requireAuth } from '../auth/guard.js'
-import { validateClaimDraft } from '../domain/validate-claim.js'
+import { requireAuth, requireRole } from '../auth/guard.js'
+import { canTransition } from '../domain/claim-status.js'
+import type { ClaimStatus } from '../domain/claim-status.js'
 import { sumCents } from '../domain/money.js'
+import { validateClaimDraft } from '../domain/validate-claim.js'
 import { claimItems, claims } from '../db/schema.js'
 
 const ClaimItemBody = Type.Object({
@@ -11,11 +13,17 @@ const ClaimItemBody = Type.Object({
   amountCents: Type.Integer(),
 })
 
+const ClaimBody = Type.Object({
+  title: Type.String({ maxLength: 200 }),
+  items: Type.Array(ClaimItemBody, { maxItems: 50 }),
+})
+
 const ClaimResponse = Type.Object({
   id: Type.String(),
   title: Type.String(),
   status: Type.String(),
   totalCents: Type.Integer(),
+  decisionReason: Type.Union([Type.String(), Type.Null()]),
   items: Type.Array(
     Type.Object({
       id: Type.String(),
@@ -25,9 +33,45 @@ const ClaimResponse = Type.Object({
   ),
 })
 
+const ClaimSummary = Type.Object({
+  id: Type.String(),
+  title: Type.String(),
+  status: Type.String(),
+  totalCents: Type.Integer(),
+})
+
 const ValidationErrors = Type.Object({
   errors: Type.Array(Type.Object({ field: Type.String(), message: Type.String() })),
 })
+
+const NotFound = Type.Object({ error: Type.String() })
+const Conflict = Type.Object({ error: Type.String() })
+
+type ClaimRow = typeof claims.$inferSelect
+
+async function serializeClaim(app: AppInstance, claim: ClaimRow) {
+  const items = await app.db.select().from(claimItems).where(eq(claimItems.claimId, claim.id))
+  return {
+    id: claim.id,
+    title: claim.title,
+    status: claim.status,
+    totalCents: sumCents(items.map((i) => i.amountCents)),
+    decisionReason: claim.decisionReason,
+    items: items.map((i) => ({ id: i.id, description: i.description, amountCents: i.amountCents })),
+  }
+}
+
+/** tenant-scoped fetch; returns undefined when invisible to the caller */
+async function visibleClaim(
+  app: AppInstance,
+  claimId: string,
+  user: { sub: string; tenantId: string; role: string },
+): Promise<ClaimRow | undefined> {
+  const [claim] = await app.db.select().from(claims).where(eq(claims.id, claimId))
+  if (!claim || claim.tenantId !== user.tenantId) return undefined
+  if (user.role === 'submitter' && claim.ownerId !== user.sub) return undefined
+  return claim
+}
 
 export function claimRoutes(app: AppInstance): void {
   app.post(
@@ -35,10 +79,7 @@ export function claimRoutes(app: AppInstance): void {
     {
       preHandler: [requireAuth],
       schema: {
-        body: Type.Object({
-          title: Type.String({ maxLength: 200 }),
-          items: Type.Array(ClaimItemBody, { maxItems: 50 }),
-        }),
+        body: ClaimBody,
         response: { 201: ClaimResponse, 400: ValidationErrors },
       },
     },
@@ -56,22 +97,83 @@ export function claimRoutes(app: AppInstance): void {
         })
         .returning()
 
-      const items = await app.db
+      await app.db
         .insert(claimItems)
         .values(request.body.items.map((item) => ({ ...item, claimId: claim!.id })))
-        .returning()
 
-      return reply.code(201).send({
-        id: claim!.id,
-        title: claim!.title,
-        status: claim!.status,
-        totalCents: sumCents(items.map((i) => i.amountCents)),
-        items: items.map((i) => ({
-          id: i.id,
-          description: i.description,
-          amountCents: i.amountCents,
+      return reply.code(201).send(await serializeClaim(app, claim!))
+    },
+  )
+
+  app.get(
+    '/claims',
+    {
+      preHandler: [requireAuth],
+      schema: {
+        querystring: Type.Object({
+          status: Type.Optional(
+            Type.Union([
+              Type.Literal('draft'),
+              Type.Literal('submitted'),
+              Type.Literal('approved'),
+              Type.Literal('rejected'),
+            ]),
+          ),
+          page: Type.Integer({ minimum: 1, default: 1 }),
+          pageSize: Type.Integer({ minimum: 1, maximum: 100, default: 20 }),
+        }),
+        response: {
+          200: Type.Object({
+            items: Type.Array(ClaimSummary),
+            total: Type.Integer(),
+            page: Type.Integer(),
+            pageSize: Type.Integer(),
+          }),
+        },
+      },
+    },
+    async (request) => {
+      const { status, page, pageSize } = request.query
+      const conditions = [eq(claims.tenantId, request.user.tenantId)]
+      if (request.user.role === 'submitter') conditions.push(eq(claims.ownerId, request.user.sub))
+      if (status) conditions.push(eq(claims.status, status))
+      const where = and(...conditions)
+
+      const [{ total }] = (await app.db
+        .select({ total: count() })
+        .from(claims)
+        .where(where)) as [{ total: number }]
+
+      const rows = await app.db
+        .select()
+        .from(claims)
+        .where(where)
+        .orderBy(desc(claims.createdAt), desc(claims.id))
+        .limit(pageSize)
+        .offset((page - 1) * pageSize)
+
+      const rowIds = rows.map((r) => r.id)
+      const items = rowIds.length
+        ? await app.db.select().from(claimItems).where(inArray(claimItems.claimId, rowIds))
+        : []
+      const totals = new Map<string, number[]>()
+      for (const item of items) {
+        const list = totals.get(item.claimId) ?? []
+        list.push(item.amountCents)
+        totals.set(item.claimId, list)
+      }
+
+      return {
+        items: rows.map((r) => ({
+          id: r.id,
+          title: r.title,
+          status: r.status,
+          totalCents: sumCents(totals.get(r.id) ?? []),
         })),
-      })
+        total,
+        page,
+        pageSize,
+      }
     },
   )
 
@@ -81,40 +183,116 @@ export function claimRoutes(app: AppInstance): void {
       preHandler: [requireAuth],
       schema: {
         params: Type.Object({ id: Type.String({ format: 'uuid' }) }),
-        response: {
-          200: ClaimResponse,
-          404: Type.Object({ error: Type.String() }),
-        },
+        response: { 200: ClaimResponse, 404: NotFound },
       },
     },
     async (request, reply) => {
-      const [claim] = await app.db
-        .select()
-        .from(claims)
-        .where(eq(claims.id, request.params.id))
+      const claim = await visibleClaim(app, request.params.id, request.user)
+      if (!claim) return reply.code(404).send({ error: 'claim not found' })
+      return serializeClaim(app, claim)
+    },
+  )
 
-      // tenant scoping: a claim outside the caller's tenant is a 404, not a 403 —
-      // existence must not leak across tenants
-      if (!claim || claim.tenantId !== request.user.tenantId) {
+  app.patch(
+    '/claims/:id',
+    {
+      preHandler: [requireAuth],
+      schema: {
+        params: Type.Object({ id: Type.String({ format: 'uuid' }) }),
+        body: ClaimBody,
+        response: { 200: ClaimResponse, 400: ValidationErrors, 404: NotFound, 409: Conflict },
+      },
+    },
+    async (request, reply) => {
+      const claim = await visibleClaim(app, request.params.id, request.user)
+      if (!claim || claim.ownerId !== request.user.sub) {
         return reply.code(404).send({ error: 'claim not found' })
       }
-      // submitters see only their own claims; approvers/admins see the tenant's
-      if (request.user.role === 'submitter' && claim.ownerId !== request.user.sub) {
+      if (claim.status !== 'draft') {
+        return reply.code(409).send({ error: 'only draft claims can be edited' })
+      }
+      const errors = validateClaimDraft(request.body)
+      if (errors.length > 0) return reply.code(400).send({ errors })
+
+      const [updated] = await app.db
+        .update(claims)
+        .set({ title: request.body.title, updatedAt: new Date() })
+        .where(and(eq(claims.id, claim.id), eq(claims.status, 'draft')))
+        .returning()
+      if (!updated) return reply.code(409).send({ error: 'claim is no longer editable' })
+
+      await app.db.delete(claimItems).where(eq(claimItems.claimId, claim.id))
+      await app.db
+        .insert(claimItems)
+        .values(request.body.items.map((item) => ({ ...item, claimId: claim.id })))
+
+      return serializeClaim(app, updated)
+    },
+  )
+
+  app.post(
+    '/claims/:id/submit',
+    {
+      preHandler: [requireAuth],
+      schema: {
+        params: Type.Object({ id: Type.String({ format: 'uuid' }) }),
+        response: { 200: ClaimResponse, 404: NotFound, 409: Conflict },
+      },
+    },
+    async (request, reply) => {
+      const claim = await visibleClaim(app, request.params.id, request.user)
+      if (!claim || claim.ownerId !== request.user.sub) {
         return reply.code(404).send({ error: 'claim not found' })
       }
-
-      const items = await app.db.select().from(claimItems).where(eq(claimItems.claimId, claim.id))
-      return {
-        id: claim.id,
-        title: claim.title,
-        status: claim.status,
-        totalCents: sumCents(items.map((i) => i.amountCents)),
-        items: items.map((i) => ({
-          id: i.id,
-          description: i.description,
-          amountCents: i.amountCents,
-        })),
+      if (!canTransition(claim.status as ClaimStatus, 'submitted')) {
+        return reply.code(409).send({ error: `cannot submit a ${claim.status} claim` })
       }
+      // atomic conditional update: the WHERE re-checks status so a concurrent
+      // transition cannot be overwritten
+      const [updated] = await app.db
+        .update(claims)
+        .set({ status: 'submitted', updatedAt: new Date() })
+        .where(and(eq(claims.id, claim.id), eq(claims.status, claim.status)))
+        .returning()
+      if (!updated) return reply.code(409).send({ error: 'claim state changed concurrently' })
+      return serializeClaim(app, updated)
+    },
+  )
+
+  app.post(
+    '/claims/:id/decision',
+    {
+      preHandler: [requireAuth, requireRole('approver', 'admin')],
+      schema: {
+        params: Type.Object({ id: Type.String({ format: 'uuid' }) }),
+        body: Type.Object({
+          decision: Type.Union([Type.Literal('approved'), Type.Literal('rejected')]),
+          reason: Type.Optional(Type.String({ maxLength: 500 })),
+        }),
+        response: { 200: ClaimResponse, 404: NotFound, 409: Conflict },
+      },
+    },
+    async (request, reply) => {
+      const claim = await visibleClaim(app, request.params.id, request.user)
+      if (!claim) return reply.code(404).send({ error: 'claim not found' })
+
+      const { decision, reason } = request.body
+      if (!canTransition(claim.status as ClaimStatus, decision)) {
+        return reply.code(409).send({ error: `cannot ${decision} a ${claim.status} claim` })
+      }
+      // race-safe: only one concurrent decision can win the conditional update
+      const [updated] = await app.db
+        .update(claims)
+        .set({
+          status: decision,
+          decisionReason: reason ?? null,
+          decidedBy: request.user.sub,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(claims.id, claim.id), eq(claims.status, 'submitted')))
+        .returning()
+      if (!updated) return reply.code(409).send({ error: 'claim was already decided' })
+      return serializeClaim(app, updated)
     },
   )
 }
