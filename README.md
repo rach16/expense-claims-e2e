@@ -9,8 +9,9 @@
 ![typescript](https://img.shields.io/badge/typescript-strict-3178C6?logo=typescript&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
-**Status: 🚧 under construction — phase 0 of 12.** The roadmap below is honest about
-what exists today.
+**Status: 🚧 under construction — phase 1 of 12 in progress.** The roadmap below is
+honest about what exists today: the skeleton and CI are real, the domain core is
+growing test-first (`money.ts` landed with its suite committed before the code).
 
 ---
 
@@ -76,7 +77,7 @@ npm test              # typecheck → unit → e2e, cheapest first
 ## Roadmap
 
 - [x] **P0** — Repo skeleton: strict TS, Vitest, Playwright, CI pipeline
-- [ ] **P1** — Domain core: money, claim state machine, ~50 unit tests
+- [ ] **P1** — Domain core: money, claim state machine, ~50 unit tests *(in progress — `sumCents` ✓)*
 - [ ] **P2** — Fastify API + Postgres + generated OpenAPI spec
 - [ ] **P2.5** — Docker: multi-stage image, compose, Trivy scan
 - [ ] **P3** — Auth + fixture graph: worker tenants, role storage states
