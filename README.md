@@ -85,8 +85,8 @@ npm test              # typecheck → unit → e2e, cheapest first
 - [x] **P2.5** — Docker: multi-stage image (non-root, healthchecked, npm-free runtime), compose profile, Trivy gate
 - [x] **P3** — Auth + fixture graph: worker tenants, per-role contexts, IDOR + refresh-rotation suites *(browser storageStates join in P6)*
 - [x] **P4** — Full API suite: lifecycle, pagination, double-approve race, contract drift gate
-- [ ] **P5** — React UI (4 screens), typed client generated from the spec
-- [ ] **P6** — E2E journeys, axe accessibility checks
+- [x] **P5** — React UI (4 screens), typed client generated from the spec
+- [x] **P6** — E2E journeys (POM, storageState, two-role contexts), axe checks, console-error guard
 - [ ] **P7** — Seeded bug flags + detection matrix
 - [ ] **P8** — CI hardening: sharding, report merging, Pages, quality gate
 - [ ] **P9** — Docs: architecture, ADRs, triage runbook
