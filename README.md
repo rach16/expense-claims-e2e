@@ -9,12 +9,12 @@
 ![typescript](https://img.shields.io/badge/typescript-strict-3178C6?logo=typescript&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
-**Status: 🚧 under construction — phases 0–4 + Docker complete.** What exists
-today: a test-first domain core, a working auth'd API (argon2id, rotating refresh
-tokens), 94 tests across unit + API layers running against the containerized app,
-worker-isolated parallel execution, and a CI pipeline with coverage-floor,
-contract-drift, and Trivy image-scan gates. UI, E2E, seeded bugs, and the
-ephemeral-AWS tier are still to come — see the roadmap.
+**Status: 🚧 under construction — phases 0–6 complete.** What exists today: a
+test-first domain core, an auth'd API (argon2id, rotating refresh tokens), a React
+UI with a spec-generated typed client, and ~110 tests across unit, API, E2E, and
+a11y layers — worker-isolated, running against the containerized app, gated in CI
+by coverage floor, contract drift, and Trivy image scanning. Seeded bugs, CI
+hardening, and the ephemeral-AWS tier are still to come — see the roadmap.
 
 ---
 
