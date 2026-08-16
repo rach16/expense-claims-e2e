@@ -1,4 +1,16 @@
 services:
+  api:
+    profiles: ['app'] # opt-in: `docker compose --profile app up`
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: postgres://claims:claims_local_dev@db:5432/claims
+      JWT_SECRET: local-compose-secret
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: postgres:16-alpine
     environment:

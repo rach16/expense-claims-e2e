@@ -56,6 +56,15 @@ jobs:
 
       - run: npm run test:api
 
+      - name: Build API image
+        run: docker build -t expense-claims-api .
+
+      - name: Trivy scan — fail on critical CVEs
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock
+          aquasec/trivy:latest image --severity CRITICAL --exit-code 1
+          --scanners vuln expense-claims-api
+
       - run: npx playwright install --with-deps chromium
 
       - run: npm run test:e2e
