@@ -80,7 +80,7 @@ npm test              # typecheck → unit → e2e, cheapest first
 - [x] **P1** — Domain core: money, claim state machine, validators — 62 unit tests, 100% coverage, 90% floor enforced
 - [x] **P2** — Fastify API + Postgres + generated OpenAPI spec *(claims endpoints land with auth in P3–P4)*
 - [ ] **P2.5** — Docker: multi-stage image, compose, Trivy scan
-- [ ] **P3** — Auth + fixture graph: worker tenants, role storage states
+- [x] **P3** — Auth + fixture graph: worker tenants, per-role contexts, IDOR + refresh-rotation suites *(browser storageStates join in P6)*
 - [ ] **P4** — Full API suite: authz matrix, pagination, race conditions
 - [ ] **P5** — React UI (4 screens), typed client generated from the spec
 - [ ] **P6** — E2E journeys, axe accessibility checks
