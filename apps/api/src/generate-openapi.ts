@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { buildApp } from './app.js'
 
-const app = await buildApp()
+const app = await buildApp({ jwtSecret: 'spec-generation-only' })
 await app.ready()
 
 const spec = app.swagger()

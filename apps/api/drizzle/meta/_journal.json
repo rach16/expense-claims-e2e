@@ -8,6 +8,13 @@
       "when": 1786900911939,
       "tag": "0000_flat_sprite",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786901585215,
+      "tag": "0001_loose_lady_ursula",
+      "breakpoints": true
     }
   ]
 }
