@@ -3,7 +3,7 @@
 > A reference-quality test automation project — Playwright + TypeScript against a
 > purpose-built expense-claims app, with seeded bugs that prove the suite earns its keep.
 
-[![ci](https://github.com/rach16/expense-claims-e2e/actions/workflows/ci.yml/badge.svg)](https://github.com/rach16/expense-claims-e2e/actions/workflows/ci.yml)
+[![ci](https://github.com/rach16/expense-claims-e2e/actions/workflows/e2e-ci.yml/badge.svg)](https://github.com/rach16/expense-claims-e2e/actions/workflows/e2e-ci.yml)
 ![node](https://img.shields.io/badge/node-%E2%89%A522-339933?logo=node.js&logoColor=white)
 ![playwright](https://img.shields.io/badge/playwright-1.62-2EAD33?logo=playwright&logoColor=white)
 ![typescript](https://img.shields.io/badge/typescript-strict-3178C6?logo=typescript&logoColor=white)
