@@ -22,6 +22,8 @@ COPY --from=proddeps /repo/node_modules ./node_modules
 COPY --from=build /repo/apps/api/dist ./dist
 # type:module lives here so node runs dist/ as ESM
 COPY apps/api/package.json ./package.json
+# the runtime never runs npm — removing it drops its bundled deps (and their CVEs)
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=5 \

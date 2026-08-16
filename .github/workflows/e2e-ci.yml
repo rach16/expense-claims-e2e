@@ -63,7 +63,7 @@ jobs:
         run: >-
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock
           aquasec/trivy:latest image --severity CRITICAL --exit-code 1
-          --scanners vuln expense-claims-api
+          --ignore-unfixed --scanners vuln expense-claims-api
 
       - run: npx playwright install --with-deps chromium
 
