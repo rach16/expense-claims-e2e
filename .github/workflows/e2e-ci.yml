@@ -8,6 +8,25 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: claims
+          POSTGRES_PASSWORD: claims_local_dev
+          POSTGRES_DB: claims
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U claims -d claims"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 15
+
+    env:
+      DATABASE_URL: postgres://claims:claims_local_dev@localhost:5432/claims
+
     steps:
       - uses: actions/checkout@v5
 
@@ -18,9 +37,18 @@ jobs:
 
       - run: npm ci
 
+      # no stored secrets: every run mints its own JWT secret
+      - name: Generate per-run JWT secret
+        run: echo "JWT_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
       - run: npm run typecheck
 
       - run: npm run test:unit
+
+      - name: Apply database migrations
+        run: npm run db:migrate --workspace @expense-claims/api
+
+      - run: npm run test:api
 
       - run: npx playwright install --with-deps chromium
 

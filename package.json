@@ -12,8 +12,9 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run --coverage",
-    "test:e2e": "playwright test",
-    "test": "npm run typecheck && npm run test:unit && npm run test:e2e"
+    "test:e2e": "playwright test --project=chromium",
+    "test": "npm run typecheck && npm run test:unit && npm run test:api && npm run test:e2e",
+    "test:api": "playwright test --project=api"
   },
   "repository": {
     "type": "git",
