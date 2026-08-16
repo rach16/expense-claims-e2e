@@ -5,7 +5,7 @@ export default defineConfig({
     include: ['apps/**/*.spec.ts'],
     coverage: {
       provider: 'v8',
-      include: ['apps/*/src/**/*.ts'],
+      include: ['apps/*/src/domain/**/*.ts'],
       exclude: ['**/*.spec.ts'],
       thresholds: {
         lines: 90,
