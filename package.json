@@ -10,7 +10,7 @@
     "apps/*"
   ],
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p apps/web --noEmit",
     "test:unit": "vitest run --coverage",
     "test:e2e": "playwright test --project=chromium",
     "test": "npm run typecheck && npm run test:unit && npm run test:api && npm run test:e2e",
@@ -22,6 +22,7 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.62.1",
     "@types/node": "^26.2.0",
     "@vitest/coverage-v8": "^4.1.10",

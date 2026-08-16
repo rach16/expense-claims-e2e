@@ -9,5 +9,6 @@
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["tests/**/*.ts", "playwright.config.ts", "vitest.config.ts", "apps/**/*.ts"]
+  "include": ["tests/**/*.ts", "playwright.config.ts", "vitest.config.ts", "apps/**/*.ts"],
+  "exclude": ["apps/web"]
 }
