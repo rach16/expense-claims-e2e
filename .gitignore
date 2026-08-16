@@ -1,0 +1,21 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+
+# test artifacts
+coverage/
+test-results/
+playwright-report/
+blob-report/
+
+# environment & secrets — never committed, CI generates its own
+.env
+.env.*
+
+# OS noise
+.DS_Store
+
+# interview prep — stays local, never public
+docs/interview-notes.md
