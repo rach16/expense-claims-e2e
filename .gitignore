@@ -23,3 +23,7 @@ docs/interview-question-bank.md
 
 # per-run auth states
 playwright/.auth/
+
+# merged report + gate output (CI artifacts, never committed)
+merged-report.json
+quality-gate-summary.md

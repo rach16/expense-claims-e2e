@@ -5,9 +5,83 @@ on:
     branches: [main]
   pull_request:
 
+# a new push supersedes an in-flight run on the same ref
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  POSTGRES_URL: postgres://claims:claims_local_dev@localhost:5432/claims
+
 jobs:
-  test:
+  # ---------- cheap checks: fail here before paying for browsers ----------
+  static:
+    name: static analysis
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - name: Contract drift gate
+        run: |
+          npm run openapi:generate --workspace @expense-claims/api
+          git diff --exit-code apps/api/openapi/openapi.json
+
+  unit:
+    name: unit + coverage floor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run test:unit
+
+  image:
+    name: image build + Trivy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build API image
+        run: docker build -t expense-claims-api .
+      - name: Trivy — fail on fixable criticals
+        run: >-
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock
+          aquasec/trivy:latest image --severity CRITICAL --exit-code 1
+          --ignore-unfixed --scanners vuln expense-claims-api
+
+  # ---------- sharded test fan-out ----------
+  test:
+    name: ${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.shards }}
+    needs: [static, unit]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: api
+            shard: 1
+            shards: 2
+          - project: api
+            shard: 2
+            shards: 2
+          - project: chromium
+            shard: 1
+            shards: 2
+          - project: chromium
+            shard: 2
+            shards: 2
 
     services:
       db:
@@ -29,49 +103,98 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-
       - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc
           cache: npm
-
       - run: npm ci
 
-      # no stored secrets: every run mints its own JWT secret
+      # no stored secrets anywhere: each run mints its own signing key
       - name: Generate per-run JWT secret
         run: echo "JWT_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
 
-      - run: npm run typecheck
+      - run: npm run db:migrate --workspace @expense-claims/api
 
-      # the committed OpenAPI spec must match what the code generates
-      - name: Contract drift gate
-        run: |
-          npm run openapi:generate --workspace @expense-claims/api
-          git diff --exit-code apps/api/openapi/openapi.json
+      - name: Install browsers
+        if: matrix.project != 'api'
+        run: npx playwright install --with-deps chromium
 
-      - run: npm run test:unit
+      - name: Run tests
+        run: npx playwright test --project=${{ matrix.project }} --shard=${{ matrix.shard }}/${{ matrix.shards }}
 
-      - name: Apply database migrations
-        run: npm run db:migrate --workspace @expense-claims/api
-
-      - run: npm run test:api
-
-      - name: Build API image
-        run: docker build -t expense-claims-api .
-
-      - name: Trivy scan — fail on critical CVEs
-        run: >-
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock
-          aquasec/trivy:latest image --severity CRITICAL --exit-code 1
-          --ignore-unfixed --scanners vuln expense-claims-api
-
-      - run: npx playwright install --with-deps chromium
-
-      - run: npm run test:e2e
-
-      - uses: actions/upload-artifact@v4
-        if: failure()
+      - name: Upload blob report
+        if: '!cancelled()'
+        uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: blob-${{ matrix.project }}-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 7
+
+  # ---------- merge shards into one report, publish, gate ----------
+  report:
+    name: merge report + quality gate
+    needs: [test]
+    if: '!cancelled()'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      - name: Download all blob reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-blobs
+          pattern: blob-*
+          merge-multiple: true
+
+      - name: Merge into HTML + JSON
+        run: |
+          npx playwright merge-reports --reporter=html,json ./all-blobs > merged-report.json
+          test -d playwright-report
+
+      - name: Upload merged HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-report
           path: playwright-report/
           retention-days: 7
+
+      - name: Upload report for Pages
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: playwright-report/
+
+      - name: Quality gate
+        id: gate
+        run: node scripts/quality-gate.mjs merged-report.json
+
+      - name: Comment results on PR
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: quality-gate
+          path: quality-gate-summary.md
+
+  # ---------- publish the report to GitHub Pages (main only) ----------
+  publish:
+    name: publish report to Pages
+    needs: [report]
+    if: github.ref == 'refs/heads/main' && !cancelled()
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

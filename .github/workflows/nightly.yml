@@ -1,0 +1,70 @@
+name: nightly
+
+# Broader, slower coverage that would tax every PR: all browsers, a mobile
+# viewport, and dependency/security scanning.
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  cross-browser:
+    name: all browsers + mobile
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: claims
+          POSTGRES_PASSWORD: claims_local_dev
+          POSTGRES_DB: claims
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U claims -d claims"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 15
+
+    env:
+      DATABASE_URL: postgres://claims:claims_local_dev@localhost:5432/claims
+      ALL_BROWSERS: '1'
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Generate per-run JWT secret
+        run: echo "JWT_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+      - run: npm run db:migrate --workspace @expense-claims/api
+      - run: npx playwright install --with-deps
+      - run: npx playwright test --project=chromium --project=firefox --project=webkit --project=mobile-chrome
+
+      - if: '!cancelled()'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-blob
+          path: blob-report/
+          retention-days: 7
+
+  audit:
+    name: dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # advisory, not blocking: transitive dev-only advisories shouldn't gate a
+      # nightly, but they should be visible in the job summary
+      - run: npm audit --audit-level=high || echo "::warning::npm audit reported findings"
