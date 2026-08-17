@@ -1,6 +1,7 @@
 import { Type } from '@sinclair/typebox'
 import { and, count, desc, eq, inArray } from 'drizzle-orm'
 import type { AppInstance } from '../types.js'
+import { isBugEnabled } from '../bugs.js'
 import { requireAuth, requireRole } from '../auth/guard.js'
 import { canTransition } from '../domain/claim-status.js'
 import type { ClaimStatus } from '../domain/claim-status.js'
@@ -68,7 +69,10 @@ async function visibleClaim(
   user: { sub: string; tenantId: string; role: string },
 ): Promise<ClaimRow | undefined> {
   const [claim] = await app.db.select().from(claims).where(eq(claims.id, claimId))
-  if (!claim || claim.tenantId !== user.tenantId) return undefined
+  if (!claim) return undefined
+  // BUG IDOR_CLAIM_READ: skips tenant + ownership scoping, exposing any claim by id
+  if (isBugEnabled('IDOR_CLAIM_READ')) return claim
+  if (claim.tenantId !== user.tenantId) return undefined
   if (user.role === 'submitter' && claim.ownerId !== user.sub) return undefined
   return claim
 }
@@ -150,7 +154,8 @@ export function claimRoutes(app: AppInstance): void {
         .where(where)
         .orderBy(desc(claims.createdAt), desc(claims.id))
         .limit(pageSize)
-        .offset((page - 1) * pageSize)
+        // BUG PAGINATION_OFF_BY_ONE: offsets by page, skipping/duplicating a row
+        .offset(isBugEnabled('PAGINATION_OFF_BY_ONE') ? page * pageSize - pageSize + 1 : (page - 1) * pageSize)
 
       const rowIds = rows.map((r) => r.id)
       const items = rowIds.length
@@ -280,7 +285,12 @@ export function claimRoutes(app: AppInstance): void {
       if (!canTransition(claim.status as ClaimStatus, decision)) {
         return reply.code(409).send({ error: `cannot ${decision} a ${claim.status} claim` })
       }
-      // race-safe: only one concurrent decision can win the conditional update
+      // race-safe: only one concurrent decision can win the conditional update.
+      // BUG RACE_DOUBLE_APPROVE: drops the status predicate, so simultaneous
+      // decisions both succeed and the last writer silently wins
+      const guard = isBugEnabled('RACE_DOUBLE_APPROVE')
+        ? eq(claims.id, claim.id)
+        : and(eq(claims.id, claim.id), eq(claims.status, 'submitted'))
       const [updated] = await app.db
         .update(claims)
         .set({
@@ -289,7 +299,7 @@ export function claimRoutes(app: AppInstance): void {
           decidedBy: request.user.sub,
           updatedAt: new Date(),
         })
-        .where(and(eq(claims.id, claim.id), eq(claims.status, 'submitted')))
+        .where(guard)
         .returning()
       if (!updated) return reply.code(409).send({ error: 'claim was already decided' })
       return serializeClaim(app, updated)

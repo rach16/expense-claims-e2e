@@ -51,7 +51,7 @@ async function createUser(
   await ctx.dispose()
 }
 
-async function loginContext(email: string): Promise<APIRequestContext> {
+export async function loginContext(email: string): Promise<APIRequestContext> {
   const ctx = await request.newContext({ baseURL: BASE_URL })
   const response = await ctx.post('/auth/login', { data: { email, password: PASSWORD } })
   if (response.status() !== 200) {

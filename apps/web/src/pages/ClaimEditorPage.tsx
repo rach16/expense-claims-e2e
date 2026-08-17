@@ -1,6 +1,7 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { client } from '../api/client.js'
+import { isBugEnabled } from '../bugs.js'
 import { formatCents, parseDollarsToCents } from '../money.js'
 
 interface ItemDraft {
@@ -18,10 +19,15 @@ export function ClaimEditorPage() {
   const [errors, setErrors] = useState<string[]>([])
   const [saved, setSaved] = useState(false)
 
+  // hydrate from the server exactly once per claim id: a late-landing fetch
+  // must never clobber edits the user has already made
+  const hydratedId = useRef<string | null>(null)
+
   useEffect(() => {
-    if (!id) return
+    if (!id || hydratedId.current === id) return
     void client.GET('/claims/{id}', { params: { path: { id } } }).then((r) => {
       if (!r.data) return
+      hydratedId.current = id
       setTitle(r.data.title)
       setStatus(r.data.status)
       setDecisionReason(r.data.decisionReason)
@@ -40,7 +46,13 @@ export function ClaimEditorPage() {
     description: i.description,
     amountCents: parseDollarsToCents(i.amount),
   }))
-  const totalCents = parsed.reduce((sum, i) => sum + (i.amountCents ?? 0), 0)
+  const liveTotal = parsed.reduce((sum, i) => sum + (i.amountCents ?? 0), 0)
+
+  // BUG UI_STALE_TOTAL: the displayed total never shrinks — removing an item
+  // leaves the previous (higher) total on screen. Invisible to the API layer.
+  const highWaterTotal = useRef(0)
+  if (liveTotal > highWaterTotal.current) highWaterTotal.current = liveTotal
+  const totalCents = isBugEnabled('UI_STALE_TOTAL') ? highWaterTotal.current : liveTotal
 
   function setItem(index: number, patch: Partial<ItemDraft>) {
     setItems(items.map((item, i) => (i === index ? { ...item, ...patch } : item)))
@@ -68,7 +80,10 @@ export function ClaimEditorPage() {
       return
     }
     if (!id && result.data) {
+      // we already hold the saved state locally — no refetch needed
+      hydratedId.current = result.data.id
       navigate(`/claims/${result.data.id}`)
+      setSaved(true)
       return
     }
     setSaved(true)
@@ -120,15 +135,29 @@ export function ClaimEditorPage() {
                 disabled={!editable}
               />
             </label>
-            <label>
-              Amount ($)
-              <input
-                value={item.amount}
-                onChange={(e) => setItem(index, { amount: e.target.value })}
-                disabled={!editable}
-                inputMode="decimal"
-              />
-            </label>
+            {/* BUG A11Y_MISSING_LABEL: the amount input loses its programmatic
+                label — visually identical, unusable with a screen reader */}
+            {isBugEnabled('A11Y_MISSING_LABEL') ? (
+              <div>
+                <span aria-hidden="true">Amount ($)</span>
+                <input
+                  value={item.amount}
+                  onChange={(e) => setItem(index, { amount: e.target.value })}
+                  disabled={!editable}
+                  inputMode="decimal"
+                />
+              </div>
+            ) : (
+              <label>
+                Amount ($)
+                <input
+                  value={item.amount}
+                  onChange={(e) => setItem(index, { amount: e.target.value })}
+                  disabled={!editable}
+                  inputMode="decimal"
+                />
+              </label>
+            )}
             {editable && items.length > 1 && (
               <button type="button" onClick={() => setItems(items.filter((_, i) => i !== index))}>
                 Remove

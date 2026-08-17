@@ -1,0 +1,55 @@
+name: detection-matrix
+
+# Proves the suite catches what it claims to: each seeded bug is switched on
+# and the expected tests must fail — and only those. Nightly plus on demand,
+# because it boots the stack once per flag.
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'apps/api/src/bugs.ts'
+      - 'apps/web/src/bugs.ts'
+      - 'scripts/detection-matrix.mjs'
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: claims
+          POSTGRES_PASSWORD: claims_local_dev
+          POSTGRES_DB: claims
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U claims -d claims"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 15
+
+    env:
+      DATABASE_URL: postgres://claims:claims_local_dev@localhost:5432/claims
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Generate per-run JWT secret
+        run: echo "JWT_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+      - run: npm run db:migrate --workspace @expense-claims/api
+
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run test:matrix

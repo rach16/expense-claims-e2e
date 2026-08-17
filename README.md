@@ -9,12 +9,13 @@
 ![typescript](https://img.shields.io/badge/typescript-strict-3178C6?logo=typescript&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
-**Status: 🚧 under construction — phases 0–6 complete.** What exists today: a
+**Status: 🚧 under construction — phases 0–7 complete.** What exists today: a
 test-first domain core, an auth'd API (argon2id, rotating refresh tokens), a React
-UI with a spec-generated typed client, and ~110 tests across unit, API, E2E, and
-a11y layers — worker-isolated, running against the containerized app, gated in CI
-by coverage floor, contract drift, and Trivy image scanning. Seeded bugs, CI
-hardening, and the ephemeral-AWS tier are still to come — see the roadmap.
+UI with a spec-generated typed client, ~110 tests across unit, API, E2E, and a11y
+layers — worker-isolated, running against the containerized app, gated in CI by
+coverage floor, contract drift, and Trivy image scanning — and seven seeded bugs
+with a detection matrix proving the suite catches every one. CI hardening and the
+ephemeral-AWS tier are still to come — see the roadmap.
 
 ---
 
@@ -27,8 +28,9 @@ decisions that actually matter in production automation:
 
 - **Layered testing** — every scenario lives at the *fastest* layer that can observe
   its failure. No E2E test for anything an API test can see.
-- **Seeded, feature-flagged bugs** — toggle `BUGS=IDOR_CLAIM_READ` and watch exactly
-  the right tests fail. A detection matrix proves the suite catches what it claims to.
+- **Seeded, feature-flagged bugs** — `BUGS=IDOR_CLAIM_READ npm test` and watch exactly
+  the right tests fail. The detection matrix runs all seven and asserts each is caught
+  by the expected tests, and only those: **7/7**.
 - **Parallel-safe isolation** — worker-scoped tenants, no shared golden data, no
   truncation between tests.
 - **Flake as a first-class concern** — retries are instrumentation, not paint;
@@ -87,7 +89,7 @@ npm test              # typecheck → unit → e2e, cheapest first
 - [x] **P4** — Full API suite: lifecycle, pagination, double-approve race, contract drift gate
 - [x] **P5** — React UI (4 screens), typed client generated from the spec
 - [x] **P6** — E2E journeys (POM, storageState, two-role contexts), axe checks, console-error guard
-- [ ] **P7** — Seeded bug flags + detection matrix
+- [x] **P7** — Seeded bug flags + detection matrix — 7/7 caught by exactly the expected tests
 - [ ] **P8** — CI hardening: sharding, report merging, Pages, quality gate
 - [ ] **P9** — Docs: architecture, ADRs, triage runbook
 - [ ] **P10** — Terraform: OIDC, ECR, ephemeral Fargate stack

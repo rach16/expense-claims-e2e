@@ -1,7 +1,10 @@
+import { isBugEnabled } from '../bugs.js'
+
 export type ClaimStatus = 'draft' | 'submitted' | 'approved' | 'rejected'
 
 const ALLOWED: Record<ClaimStatus, readonly ClaimStatus[]> = {
-  draft: ['submitted'],
+  // BUG STATE_SKIP: lets a draft be approved without ever being submitted
+  draft: isBugEnabled('STATE_SKIP') ? ['submitted', 'approved'] : ['submitted'],
   submitted: ['approved', 'rejected'],
   approved: [],
   rejected: [],

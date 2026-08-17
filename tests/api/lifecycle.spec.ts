@@ -1,5 +1,5 @@
 import type { APIRequestContext } from '@playwright/test'
-import { aClaimBody, expect, test } from './fixtures.js'
+import { aClaimBody, expect, loginContext, test } from './fixtures.js'
 
 async function createDraft(ctx: APIRequestContext): Promise<string> {
   const response = await ctx.post('/claims', { data: aClaimBody() })
@@ -96,15 +96,33 @@ test.describe('claim lifecycle', () => {
 
   test('concurrent decisions: exactly one wins (RACE_DOUBLE_APPROVE trap)', async ({
     asSubmitter,
-    asApprover,
-    asAdmin,
+    tenant,
   }) => {
     const id = await createSubmitted(asSubmitter)
-    const [a, b] = await Promise.all([
-      asApprover.post(`/claims/${id}/decision`, { data: { decision: 'approved' } }),
-      asAdmin.post(`/claims/${id}/decision`, { data: { decision: 'rejected' } }),
+
+    // NOTE: one APIRequestContext serialises its requests, so firing from a
+    // single context is not a race at all. Independent contexts = independent
+    // connections = genuinely simultaneous writes.
+    const contexts = await Promise.all([
+      loginContext(tenant.approverEmail),
+      loginContext(tenant.adminEmail),
+      loginContext(tenant.approverEmail),
+      loginContext(tenant.adminEmail),
     ])
-    const statuses = [a.status(), b.status()].sort()
-    expect(statuses).toEqual([200, 409])
+
+    const responses = await Promise.all(
+      contexts.map((ctx, i) =>
+        ctx.post(`/claims/${id}/decision`, {
+          data: { decision: i % 2 === 0 ? 'approved' : 'rejected' },
+        }),
+      ),
+    )
+
+    // the read-then-check in the handler is NOT a concurrency control; only the
+    // atomic conditional UPDATE can hold this to a single winner
+    expect(responses.filter((r) => r.status() === 200)).toHaveLength(1)
+    expect(responses.filter((r) => r.status() === 409)).toHaveLength(contexts.length - 1)
+
+    await Promise.all(contexts.map((ctx) => ctx.dispose()))
   })
 })

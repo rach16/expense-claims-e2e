@@ -32,17 +32,22 @@ export default defineConfig({
     {
       command: 'npm run start --workspace @expense-claims/api',
       url: 'http://localhost:3000/health',
-      reuseExistingServer: !process.env.CI,
+      // the detection matrix must never reuse a server booted without its flags
+      reuseExistingServer: !process.env.CI && !process.env.DETECTION_MATRIX,
       env: {
         DATABASE_URL,
         JWT_SECRET: process.env.JWT_SECRET ?? 'local-test-secret',
         NODE_ENV: 'test',
+        BUGS: process.env.BUGS ?? '',
       },
     },
     {
       command: 'npm run dev --workspace @expense-claims/web',
       url: 'http://localhost:5173',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: !process.env.CI && !process.env.DETECTION_MATRIX,
+      env: {
+        VITE_BUGS: process.env.VITE_BUGS ?? '',
+      },
     },
   ],
 })

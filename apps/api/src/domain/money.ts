@@ -1,8 +1,14 @@
+import { isBugEnabled } from '../bugs.js'
+
 export function sumCents(amounts: number[]): number {
     for (const amount of amounts) {
     if(!Number.isInteger(amount)) {
         throw new TypeError(`Amount ${amount} is not an integer`)
     }
+}
+if (isBugEnabled('MONEY_ROUNDING')) {
+    // BUG MONEY_ROUNDING: sums via floating-point dollars — IEEE-754 noise
+    return amounts.reduce((total, amount) => total + amount / 100, 0) * 100
 }
 return amounts.reduce((total, amount) => total + amount, 0)
   }
