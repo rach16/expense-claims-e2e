@@ -176,18 +176,32 @@ jobs:
         id: gate
         run: node scripts/quality-gate.mjs merged-report.json
 
+      # sticky comment via the API rather than a third-party action: one less
+      # external dependency to download (and to trust) on every run
       - name: Comment results on PR
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: quality-gate
-          path: quality-gate-summary.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          MARKER='<!-- quality-gate -->'
+          BODY="$MARKER"$'\n'"$(cat quality-gate-summary.md)"
+          ID=$(gh api "repos/$REPO/issues/$PR/comments" --jq \
+            ".[] | select(.body | startswith(\"$MARKER\")) | .id" | head -1)
+          if [ -n "$ID" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$ID" -f body="$BODY" --silent
+          else
+            gh api -X POST "repos/$REPO/issues/$PR/comments" -f body="$BODY" --silent
+          fi
 
   # ---------- publish the report to GitHub Pages (main only) ----------
   publish:
     name: publish report to Pages
     needs: [report]
-    if: github.ref == 'refs/heads/main' && !cancelled()
+    # `!cancelled()` would override the implicit needs-success requirement and
+    # try to deploy an artifact that was never uploaded — be explicit instead
+    if: github.ref == 'refs/heads/main' && needs.report.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       pages: write
