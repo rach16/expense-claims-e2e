@@ -4,18 +4,23 @@
 > purpose-built expense-claims app, with seeded bugs that prove the suite earns its keep.
 
 [![ci](https://github.com/rach16/expense-claims-e2e/actions/workflows/e2e-ci.yml/badge.svg)](https://github.com/rach16/expense-claims-e2e/actions/workflows/e2e-ci.yml)
+[![nightly](https://github.com/rach16/expense-claims-e2e/actions/workflows/nightly.yml/badge.svg)](https://github.com/rach16/expense-claims-e2e/actions/workflows/nightly.yml)
+[![detection matrix](https://github.com/rach16/expense-claims-e2e/actions/workflows/detection-matrix.yml/badge.svg)](https://github.com/rach16/expense-claims-e2e/actions/workflows/detection-matrix.yml)
 ![node](https://img.shields.io/badge/node-%E2%89%A522-339933?logo=node.js&logoColor=white)
 ![playwright](https://img.shields.io/badge/playwright-1.62-2EAD33?logo=playwright&logoColor=white)
 ![typescript](https://img.shields.io/badge/typescript-strict-3178C6?logo=typescript&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
-**Status: 🚧 under construction — phases 0–7 complete.** What exists today: a
+📊 **[Latest test report](https://rach16.github.io/expense-claims-e2e/)** — merged from every CI shard, published on each push to `main`.
+
+**Status: 🚧 under construction — phases 0–8 complete.** What exists today: a
 test-first domain core, an auth'd API (argon2id, rotating refresh tokens), a React
 UI with a spec-generated typed client, ~110 tests across unit, API, E2E, and a11y
 layers — worker-isolated, running against the containerized app, gated in CI by
 coverage floor, contract drift, and Trivy image scanning — and seven seeded bugs
-with a detection matrix proving the suite catches every one. CI hardening and the
-ephemeral-AWS tier are still to come — see the roadmap.
+with a detection matrix proving the suite catches every one. CI hardening is done — sharded jobs, a merged report on Pages,
+and a quality gate that blocks on failures and excess flake. The ephemeral-AWS
+tier is still to come — see the roadmap.
 
 ---
 
@@ -90,7 +95,7 @@ npm test              # typecheck → unit → e2e, cheapest first
 - [x] **P5** — React UI (4 screens), typed client generated from the spec
 - [x] **P6** — E2E journeys (POM, storageState, two-role contexts), axe checks, console-error guard
 - [x] **P7** — Seeded bug flags + detection matrix — 7/7 caught by exactly the expected tests
-- [ ] **P8** — CI hardening: sharding, report merging, Pages, quality gate
+- [x] **P8** — CI hardening: 4-way sharding, blob merge, Pages-published report, quality gate, nightly cross-browser
 - [ ] **P9** — Docs: architecture, ADRs, triage runbook
 - [ ] **P10** — Terraform: OIDC, ECR, ephemeral Fargate stack
 - [ ] **P11** — Deploy-smoke workflow: apply → test → always destroy
