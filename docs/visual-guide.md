@@ -7,7 +7,7 @@ read this one.
 
 ## 1. What this is
 
-<img src="diagrams/system-overview.svg" alt="System overview: three test layers on the left calling a Fastify API and React UI, with the generated OpenAPI spec closing the contract loop, and seven seeded bugs mapped to the layer that catches each" width="100%">
+![System overview: three test layers on the left calling a Fastify API and React UI, with the generated OpenAPI spec closing the contract loop, and seven seeded bugs mapped to the layer that catches each](diagrams/system-overview.svg)
 
 An expense-claims app exists here **only so the tests have something real to
 test**: controllable data, a deterministic auth story, and defects that can be
@@ -26,7 +26,7 @@ A shape change fails the build and breaks the UI's types at the same time.
 
 ## 2. How it runs in parallel without stepping on itself
 
-<img src="diagrams/parallel-isolation.svg" alt="Each Playwright worker registers its own tenant through the API; every database row is tenant-scoped so workers cannot see each other's data" width="100%">
+![Each Playwright worker registers its own tenant through the API; every database row is tenant-scoped so workers cannot see each other's data](diagrams/parallel-isolation.svg)
 
 Isolation is a property of the **data model**, not of test ordering. Each worker
 registers its own tenant through the real API at startup, and every row is
@@ -44,7 +44,7 @@ than the app. ([ADR 003](adr/003-worker-scoped-tenants.md))
 
 ## 3. How auth works — and how it's tested
 
-<img src="diagrams/auth-flow.svg" alt="Access token and rotating refresh token lifecycle with family revocation, per-role storage states for the test suite, and the negative-test matrix" width="100%">
+![Access token and rotating refresh token lifecycle with family revocation, per-role storage states for the test suite, and the negative-test matrix](diagrams/auth-flow.svg)
 
 Auth is both **infrastructure and subject**. As infrastructure: sessions are
 minted once per role through the API and reused as `storageState`, so tests start
@@ -63,7 +63,7 @@ key per run and registers its own users.**
 
 ## 4. How CI decides whether to trust a change
 
-<img src="diagrams/ci-pipeline.svg" alt="CI pipeline: cheap concurrent checks, then four sharded test jobs, merged into one report, then a quality gate, publishing to Pages, PR comment and job summary" width="100%">
+![CI pipeline: cheap concurrent checks, then four sharded test jobs, merged into one report, then a quality gate, publishing to Pages, PR comment and job summary](diagrams/ci-pipeline.svg)
 
 Cheap checks run first and concurrently; only then do sharded jobs pay for
 browsers. Four shards produce four blob reports, merged into **one** HTML report

@@ -47,7 +47,7 @@ decisions that actually matter in production automation:
 
 ## Architecture
 
-<img src="docs/diagrams/system-overview.svg" alt="System overview: three test layers calling the API and UI, the generated OpenAPI spec closing the contract loop, and seven seeded bugs mapped to the layer that catches each" width="100%">
+![System overview: three test layers calling the API and UI, the generated OpenAPI spec closing the contract loop, and seven seeded bugs mapped to the layer that catches each](docs/diagrams/system-overview.svg)
 
 Tests never import app internals — they hit the app over HTTP like a real client.
 The apps are npm workspaces; the test layers are outside consumers.
