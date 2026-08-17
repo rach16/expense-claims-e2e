@@ -13,7 +13,7 @@
 
 📊 **[Latest test report](https://rach16.github.io/expense-claims-e2e/)** — merged from every CI shard, published on each push to `main`.
 
-**Status: 🚧 under construction — phases 0–8 complete.** What exists today: a
+**Status: 🚧 under construction — phases 0–9 complete.** What exists today: a
 test-first domain core, an auth'd API (argon2id, rotating refresh tokens), a React
 UI with a spec-generated typed client, ~110 tests across unit, API, E2E, and a11y
 layers — worker-isolated, running against the containerized app, gated in CI by
@@ -78,11 +78,36 @@ The apps are npm workspaces; the test layers are outside consumers.
 ## Getting started
 
 ```bash
-nvm use               # Node 22+
-npm ci                # exact lockfile install
+nvm use                        # Node 22+
+npm ci                         # exact lockfile install
 npx playwright install chromium
-npm test              # typecheck → unit → e2e, cheapest first
+docker compose up -d db        # Postgres 16
+npm run db:migrate --workspace @expense-claims/api
+npm test                       # typecheck → unit → api → e2e, cheapest first
 ```
+
+Other entry points:
+
+```bash
+npm run test:matrix            # prove the suite catches all 7 seeded bugs
+docker compose --profile app up   # run the API from its production image
+BUGS=IDOR_CLAIM_READ npm run test:api   # watch the authz tests catch a planted bug
+```
+
+## Reviewer's guide
+
+Short on time? These five files carry the argument:
+
+| Look at | Why it matters |
+|---|---|
+| [`tests/api/fixtures.ts`](tests/api/fixtures.ts) | Worker-scoped tenants + per-role contexts — how the suite runs fully parallel without shared state |
+| [`scripts/detection-matrix.mjs`](scripts/detection-matrix.mjs) | Proof the tests catch real defects, per layer, with expectations that can't silently change |
+| [`tests/e2e/setup.ts`](tests/e2e/setup.ts) | Auth minted once per role via API, reused as `storageState`; one test drives the real login form |
+| [`apps/api/src/routes/claims.ts`](apps/api/src/routes/claims.ts) | Schema-per-route (validation + types + OpenAPI), tenant scoping as 404, atomic conditional updates for concurrency |
+| [`.github/workflows/e2e-ci.yml`](.github/workflows/e2e-ci.yml) | Cheap-first fan-out, sharding, blob merge, published report, one required gate |
+
+Then: [architecture](docs/architecture.md) · [ADRs](docs/adr/) ·
+[seeded bugs](docs/seeded-bugs.md) · [triage runbook](docs/triage-runbook.md)
 
 ## Roadmap
 
@@ -96,7 +121,7 @@ npm test              # typecheck → unit → e2e, cheapest first
 - [x] **P6** — E2E journeys (POM, storageState, two-role contexts), axe checks, console-error guard
 - [x] **P7** — Seeded bug flags + detection matrix — 7/7 caught by exactly the expected tests
 - [x] **P8** — CI hardening: 4-way sharding, blob merge, Pages-published report, quality gate, nightly cross-browser
-- [ ] **P9** — Docs: architecture, ADRs, triage runbook
+- [x] **P9** — Docs: architecture guide, 7 ADRs, seeded-bug reference, triage runbook, reviewer's guide
 - [ ] **P10** — Terraform: OIDC, ECR, ephemeral Fargate stack
 - [ ] **P11** — Deploy-smoke workflow: apply → test → always destroy
 - [ ] **P12** — Cost guardrails: janitor, budget alarm, scorched-earth script
