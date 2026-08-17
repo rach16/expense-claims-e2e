@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 560" width="940" height="560" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="f1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#495057"/>
+    </marker>
+    <marker id="f1r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#e03131"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="940" height="560" fill="#ffffff"/>
+  <text x="32" y="44" font-size="22" font-weight="700" fill="#1e1e1e">Auth — deterministic, self-contained, zero stored secrets</text>
+  <text x="32" y="68" font-size="14" fill="#868e96">No hosted IdP. CI mints its own signing key per run and registers its own users.</text>
+
+  <!-- token lifecycle -->
+  <rect x="32" y="96" width="500" height="238" rx="14" fill="#f8f9fa" stroke="#adb5bd" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="52" y="124" font-size="15" font-weight="700" fill="#495057">Token lifecycle</text>
+
+  <rect x="52" y="140" width="200" height="76" rx="10" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="68" y="164" font-size="13.5" font-weight="700" fill="#1e1e1e">access token · JWT</text>
+  <text x="68" y="184" font-size="12" fill="#2b2b2b">HS256 · 5 min TTL</text>
+  <text x="68" y="201" font-size="12" fill="#1864ab">sub · tenantId · role</text>
+
+  <rect x="290" y="140" width="222" height="76" rx="10" fill="#ffec99" stroke="#f08c00" stroke-width="2"/>
+  <text x="306" y="164" font-size="13.5" font-weight="700" fill="#1e1e1e">refresh token</text>
+  <text x="306" y="184" font-size="12" fill="#2b2b2b">random 256-bit, stored hashed</text>
+  <text x="306" y="201" font-size="12" fill="#e8590c">httpOnly · SameSite=Strict cookie</text>
+
+  <rect x="52" y="236" width="460" height="80" rx="10" fill="#ffc9c9" stroke="#e03131" stroke-width="2"/>
+  <text x="68" y="260" font-size="13.5" font-weight="700" fill="#1e1e1e">rotation + reuse detection</text>
+  <text x="68" y="280" font-size="12" fill="#2b2b2b">every refresh consumes the old token and issues a successor in the same family</text>
+  <text x="68" y="298" font-size="12" fill="#c92a2a">replaying a consumed token = theft signal → the entire family is revoked</text>
+
+  <path d="M256,178 L285,178" stroke="#495057" stroke-width="2" fill="none" marker-end="url(#f1)"/>
+  <path d="M400,220 L340,232" stroke="#e03131" stroke-width="2" fill="none" marker-end="url(#f1r)"/>
+
+  <!-- how tests use it -->
+  <rect x="560" y="96" width="348" height="238" rx="14" fill="#f8f9fa" stroke="#adb5bd" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="580" y="124" font-size="15" font-weight="700" fill="#495057">How the suite uses auth</text>
+
+  <rect x="580" y="140" width="308" height="60" rx="10" fill="#d0bfff" stroke="#6741d9" stroke-width="2"/>
+  <text x="596" y="164" font-size="13" font-weight="700" fill="#1e1e1e">setup project — once per run</text>
+  <text x="596" y="184" font-size="11.5" fill="#5f3dc4">register tenant → create roles → save storageState</text>
+
+  <rect x="580" y="212" width="146" height="60" rx="10" fill="#ffffff" stroke="#6741d9" stroke-width="2"/>
+  <text x="594" y="234" font-size="12.5" font-weight="700" fill="#1e1e1e">submitter.json</text>
+  <text x="594" y="252" font-size="11" fill="#5f3dc4">test.use({...})</text>
+
+  <rect x="742" y="212" width="146" height="60" rx="10" fill="#ffffff" stroke="#6741d9" stroke-width="2"/>
+  <text x="756" y="234" font-size="12.5" font-weight="700" fill="#1e1e1e">approver.json</text>
+  <text x="756" y="252" font-size="11" fill="#5f3dc4">+ admin.json</text>
+
+  <rect x="580" y="286" width="308" height="34" rx="9" fill="#e7f5ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="596" y="308" font-size="12" fill="#1864ab">exactly ONE test drives the real login form</text>
+
+  <path d="M700,204 L660,208" stroke="#495057" stroke-width="2" fill="none" marker-end="url(#f1)"/>
+  <path d="M760,204 L800,208" stroke="#495057" stroke-width="2" fill="none" marker-end="url(#f1)"/>
+
+  <!-- what gets tested -->
+  <rect x="32" y="356" width="876" height="176" rx="14" fill="#ffffff" stroke="#e03131" stroke-width="2"/>
+  <text x="52" y="384" font-size="15" font-weight="700" fill="#c92a2a">Auth is a fixture AND a subject — the negative matrix</text>
+
+  <rect x="52" y="400" width="200" height="52" rx="9" fill="#fff5f5" stroke="#e03131" stroke-width="1.5"/>
+  <text x="66" y="420" font-size="12" font-weight="700" fill="#1e1e1e">wrong password → 401</text>
+  <text x="66" y="438" font-size="11" fill="#2b2b2b">unknown email → 401 (same timing)</text>
+
+  <rect x="266" y="400" width="200" height="52" rx="9" fill="#fff5f5" stroke="#e03131" stroke-width="1.5"/>
+  <text x="280" y="420" font-size="12" font-weight="700" fill="#1e1e1e">forged signature → 401</text>
+  <text x="280" y="438" font-size="11" fill="#2b2b2b">missing token → 401</text>
+
+  <rect x="480" y="400" width="200" height="52" rx="9" fill="#fff5f5" stroke="#e03131" stroke-width="1.5"/>
+  <text x="494" y="420" font-size="12" font-weight="700" fill="#1e1e1e">role matrix on /users</text>
+  <text x="494" y="438" font-size="11" fill="#2b2b2b">admin 201 · approver 403 · submitter 403 · anon 401</text>
+
+  <rect x="694" y="400" width="200" height="52" rx="9" fill="#fff5f5" stroke="#e03131" stroke-width="1.5"/>
+  <text x="708" y="420" font-size="12" font-weight="700" fill="#1e1e1e">cross-tenant read → 404</text>
+  <text x="708" y="438" font-size="11" fill="#2b2b2b">not 403 — existence must not leak</text>
+
+  <rect x="52" y="466" width="842" height="50" rx="9" fill="#f8f9fa" stroke="#868e96" stroke-width="1.5"/>
+  <text x="68" y="488" font-size="12.5" font-weight="700" fill="#1e1e1e">The assertion most people skip</text>
+  <text x="68" y="506" font-size="12" fill="#2b2b2b">after a replayed refresh token is rejected, the legitimately-issued successor must be dead too — that is what proves family revocation, not just replay rejection.</text>
+</svg>

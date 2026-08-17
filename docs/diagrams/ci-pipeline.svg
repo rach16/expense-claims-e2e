@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" width="980" height="560" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="p1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#495057"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="980" height="560" fill="#ffffff"/>
+  <text x="32" y="44" font-size="22" font-weight="700" fill="#1e1e1e">CI pipeline — cheapest first, then fan out</text>
+  <text x="32" y="68" font-size="14" fill="#868e96">A type error must never cost a browser download. Critical path ≈ 70s for ~4× the work of the old sequential job.</text>
+
+  <!-- stage 1 -->
+  <text x="42" y="106" font-size="12" font-weight="700" fill="#868e96">STAGE 1 — cheap, concurrent</text>
+  <rect x="32" y="116" width="196" height="76" rx="10" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+  <text x="48" y="140" font-size="14" font-weight="700" fill="#1e1e1e">static analysis</text>
+  <text x="48" y="160" font-size="12" fill="#2b2b2b">typecheck (api + web)</text>
+  <text x="48" y="177" font-size="12" fill="#2b2b2b">contract drift gate</text>
+
+  <rect x="32" y="204" width="196" height="66" rx="10" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+  <text x="48" y="228" font-size="14" font-weight="700" fill="#1e1e1e">unit + coverage</text>
+  <text x="48" y="248" font-size="12" fill="#2b2b2b">62 tests · 90% domain floor</text>
+
+  <rect x="32" y="282" width="196" height="66" rx="10" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+  <text x="48" y="306" font-size="14" font-weight="700" fill="#1e1e1e">image + Trivy</text>
+  <text x="48" y="326" font-size="12" fill="#2b2b2b">fail on fixable criticals</text>
+
+  <!-- stage 2 -->
+  <text x="292" y="106" font-size="12" font-weight="700" fill="#868e96">STAGE 2 — sharded across runners</text>
+  <rect x="282" y="116" width="230" height="58" rx="10" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="298" y="140" font-size="13.5" font-weight="700" fill="#1e1e1e">api  —  shard 1/2</text>
+  <text x="298" y="160" font-size="12" fill="#1864ab">postgres service container</text>
+
+  <rect x="282" y="184" width="230" height="58" rx="10" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="298" y="208" font-size="13.5" font-weight="700" fill="#1e1e1e">api  —  shard 2/2</text>
+  <text x="298" y="228" font-size="12" fill="#1864ab">per-run JWT secret (openssl)</text>
+
+  <rect x="282" y="252" width="230" height="58" rx="10" fill="#d0bfff" stroke="#6741d9" stroke-width="2"/>
+  <text x="298" y="276" font-size="13.5" font-weight="700" fill="#1e1e1e">chromium  —  shard 1/2</text>
+  <text x="298" y="296" font-size="12" fill="#5f3dc4">blob reporter</text>
+
+  <rect x="282" y="320" width="230" height="58" rx="10" fill="#d0bfff" stroke="#6741d9" stroke-width="2"/>
+  <text x="298" y="344" font-size="13.5" font-weight="700" fill="#1e1e1e">chromium  —  shard 2/2</text>
+  <text x="298" y="364" font-size="12" fill="#5f3dc4">trace on first retry</text>
+
+  <!-- stage 3 -->
+  <text x="576" y="106" font-size="12" font-weight="700" fill="#868e96">STAGE 3 — merge &amp; decide</text>
+  <rect x="566" y="116" width="196" height="90" rx="10" fill="#ffec99" stroke="#f08c00" stroke-width="2"/>
+  <text x="582" y="140" font-size="14" font-weight="700" fill="#1e1e1e">merge-reports</text>
+  <text x="582" y="160" font-size="12" fill="#2b2b2b">4 blobs → 1 HTML report</text>
+  <text x="582" y="177" font-size="12" fill="#2b2b2b">+ JSON for the gate</text>
+  <text x="582" y="195" font-size="11.5" fill="#e8590c">traces attached to failures</text>
+
+  <rect x="566" y="222" width="196" height="118" rx="10" fill="#ffc9c9" stroke="#e03131" stroke-width="2"/>
+  <text x="582" y="246" font-size="14" font-weight="700" fill="#1e1e1e">quality gate</text>
+  <text x="582" y="268" font-size="12" fill="#c92a2a">BLOCKS on</text>
+  <text x="582" y="285" font-size="12" fill="#2b2b2b">· any failure after retries</text>
+  <text x="582" y="302" font-size="12" fill="#2b2b2b">· &gt; 2 flaky (retry-passers)</text>
+  <text x="582" y="322" font-size="12" fill="#868e96">reports duration + slowest</text>
+
+  <!-- outputs -->
+  <text x="806" y="106" font-size="12" font-weight="700" fill="#868e96">WHERE RESULTS SHOW UP</text>
+  <rect x="796" y="116" width="152" height="62" rx="10" fill="#f8f9fa" stroke="#868e96" stroke-width="2"/>
+  <text x="812" y="140" font-size="13" font-weight="700" fill="#1e1e1e">GitHub Pages</text>
+  <text x="812" y="160" font-size="11.5" fill="#2b2b2b">live report, main only</text>
+
+  <rect x="796" y="192" width="152" height="62" rx="10" fill="#f8f9fa" stroke="#868e96" stroke-width="2"/>
+  <text x="812" y="216" font-size="13" font-weight="700" fill="#1e1e1e">PR comment</text>
+  <text x="812" y="236" font-size="11.5" fill="#2b2b2b">sticky, updated in place</text>
+
+  <rect x="796" y="268" width="152" height="62" rx="10" fill="#f8f9fa" stroke="#868e96" stroke-width="2"/>
+  <text x="812" y="292" font-size="13" font-weight="700" fill="#1e1e1e">job summary</text>
+  <text x="812" y="312" font-size="11.5" fill="#2b2b2b">+ artifacts, 7 days</text>
+
+  <!-- arrows -->
+  <path d="M232,154 L276,150" stroke="#495057" stroke-width="2" fill="none" marker-end="url(#p1)"/>
+  <path d="M232,236 L276,220" stroke="#495057" stroke-width="2" fill="none" marker-end="url(#p1)"/>
+  <path d="M516,200 L560,180" stroke="#495057" stroke-width="2" fill="none" marker-end="url(#p1)"/>
+  <path d="M516,290 L560,200" stroke="#495057" stroke-width="2" fill="none" marker-end="url(#p1)"/>
+  <path d="M664,206 L664,218" stroke="#495057" stroke-width="2" fill="none" marker-end="url(#p1)"/>
+  <path d="M766,160 L790,150" stroke="#495057" stroke-width="2" fill="none" marker-end="url(#p1)"/>
+  <path d="M766,250 L790,228" stroke="#495057" stroke-width="2" fill="none" marker-end="url(#p1)"/>
+  <path d="M766,290 L790,300" stroke="#495057" stroke-width="2" fill="none" marker-end="url(#p1)"/>
+
+  <!-- nightly -->
+  <rect x="32" y="410" width="916" height="120" rx="14" fill="#f8f9fa" stroke="#adb5bd" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="52" y="438" font-size="15" font-weight="700" fill="#495057">On a schedule, not on every PR</text>
+  <text x="52" y="460" font-size="12.5" fill="#2b2b2b">PR checks must stay fast enough that nobody is tempted to skip them. Anything that merely needs to be true daily belongs on a cron.</text>
+
+  <rect x="52" y="474" width="270" height="42" rx="9" fill="#ffffff" stroke="#6741d9" stroke-width="2"/>
+  <text x="66" y="492" font-size="12.5" font-weight="700" fill="#1e1e1e">nightly · firefox + webkit + mobile</text>
+  <text x="66" y="508" font-size="11.5" fill="#5f3dc4">plus dependency audit (advisory)</text>
+
+  <rect x="340" y="474" width="300" height="42" rx="9" fill="#ffffff" stroke="#e03131" stroke-width="2"/>
+  <text x="354" y="492" font-size="12.5" font-weight="700" fill="#1e1e1e">nightly · seeded-bug detection matrix</text>
+  <text x="354" y="508" font-size="11.5" fill="#c92a2a">boots the stack once per flag — 7/7 must be caught</text>
+
+  <rect x="658" y="474" width="290" height="42" rx="9" fill="#ffffff" stroke="#f08c00" stroke-width="2"/>
+  <text x="672" y="492" font-size="12.5" font-weight="700" fill="#1e1e1e">on demand · deploy-smoke (P11)</text>
+  <text x="672" y="508" font-size="11.5" fill="#e8590c">ephemeral AWS env → smoke → always destroy</text>
+</svg>

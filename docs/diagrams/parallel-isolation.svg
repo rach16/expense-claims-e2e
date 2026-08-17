@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 520" width="940" height="520" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#495057"/>
+    </marker>
+    <marker id="a2red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#e03131"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="940" height="520" fill="#ffffff"/>
+  <text x="32" y="44" font-size="22" font-weight="700" fill="#1e1e1e">Parallel isolation — tenants, not locks</text>
+  <text x="32" y="68" font-size="14" fill="#868e96">No truncation between tests. No shared golden data. No run-order coupling.</text>
+
+  <!-- workers -->
+  <rect x="32" y="98" width="250" height="300" rx="14" fill="#f8f9fa" stroke="#adb5bd" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="52" y="126" font-size="15" font-weight="700" fill="#495057">Playwright workers</text>
+
+  <rect x="52" y="142" width="210" height="70" rx="10" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="68" y="166" font-size="14" font-weight="700" fill="#1e1e1e">worker 0</text>
+  <text x="68" y="186" font-size="12" fill="#2b2b2b">runs tests in parallel</text>
+  <text x="68" y="202" font-size="12" fill="#1864ab">fixture: tenant (worker scope)</text>
+
+  <rect x="52" y="226" width="210" height="70" rx="10" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="68" y="250" font-size="14" font-weight="700" fill="#1e1e1e">worker 1</text>
+  <text x="68" y="270" font-size="12" fill="#2b2b2b">runs tests in parallel</text>
+  <text x="68" y="286" font-size="12" fill="#1864ab">fixture: tenant (worker scope)</text>
+
+  <rect x="52" y="310" width="210" height="54" rx="10" fill="#e9ecef" stroke="#868e96" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="68" y="334" font-size="14" font-weight="700" fill="#495057">worker n …</text>
+  <text x="68" y="352" font-size="12" fill="#495057">scales with CPU / shards</text>
+
+  <!-- database -->
+  <rect x="380" y="98" width="520" height="300" rx="14" fill="#f8f9fa" stroke="#adb5bd" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="400" y="126" font-size="15" font-weight="700" fill="#495057">one Postgres — every row carries tenant_id</text>
+
+  <rect x="400" y="142" width="230" height="118" rx="10" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+  <text x="416" y="166" font-size="14" font-weight="700" fill="#1e1e1e">tenant A  (worker 0)</text>
+  <text x="416" y="188" font-size="12" fill="#2b2b2b">admin · submitter · submitter2 · approver</text>
+  <text x="416" y="210" font-size="12" fill="#2b2b2b">claims created by its own tests</text>
+  <text x="416" y="234" font-size="11.5" fill="#2f9e44">registered through the real API at startup</text>
+  <text x="416" y="251" font-size="11.5" fill="#2f9e44">dies with the run — no cleanup needed</text>
+
+  <rect x="650" y="142" width="230" height="118" rx="10" fill="#ffec99" stroke="#f08c00" stroke-width="2"/>
+  <text x="666" y="166" font-size="14" font-weight="700" fill="#1e1e1e">tenant B  (worker 1)</text>
+  <text x="666" y="188" font-size="12" fill="#2b2b2b">its own users</text>
+  <text x="666" y="210" font-size="12" fill="#2b2b2b">its own claims</text>
+  <text x="666" y="234" font-size="11.5" fill="#e8590c">plus a second tenant per worker,</text>
+  <text x="666" y="251" font-size="11.5" fill="#e8590c">used to prove cross-tenant reads 404</text>
+
+  <!-- blocked arrow -->
+  <path d="M634,300 L646,300" stroke="#e03131" stroke-width="0" />
+  <path d="M560,286 C600,330 680,330 720,286" stroke="#e03131" stroke-width="2.5" fill="none" stroke-dasharray="6 5" marker-end="url(#a2red)"/>
+  <circle cx="640" cy="316" r="15" fill="#ffffff" stroke="#e03131" stroke-width="2.5"/>
+  <path d="M631,307 L649,325 M649,307 L631,325" stroke="#e03131" stroke-width="2.5"/>
+  <text x="470" y="356" font-size="12.5" fill="#c92a2a">a worker cannot see another worker's data — the query itself is tenant-scoped</text>
+
+  <path d="M266,178 L395,190" stroke="#495057" stroke-width="2.5" fill="none" marker-end="url(#a2)"/>
+  <path d="M266,262 L395,214" stroke="#495057" stroke-width="2.5" fill="none" marker-end="url(#a2)"/>
+
+  <!-- footer note -->
+  <rect x="32" y="420" width="868" height="72" rx="12" fill="#e7f5ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="52" y="446" font-size="14" font-weight="700" fill="#1864ab">Why this over the alternatives</text>
+  <text x="52" y="468" font-size="12.5" fill="#2b2b2b">truncate-between-tests → serialises the suite   ·   transactional rollback → impossible across HTTP   ·   schema-per-worker → tests the harness, not the app</text>
+  <text x="52" y="486" font-size="12.5" fill="#1864ab">Tenant scoping is isolation the product already needs, so the suite exercises it continuously.  See ADR 003.</text>
+</svg>

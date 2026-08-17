@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 600" width="940" height="600" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#495057"/>
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1971c2"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2f9e44"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="940" height="600" fill="#ffffff"/>
+  <text x="32" y="44" font-size="22" font-weight="700" fill="#1e1e1e">expense-claims-e2e — system overview</text>
+  <text x="32" y="68" font-size="14" fill="#868e96">The app is scaffolding. The tests are the deliverable.</text>
+
+  <!-- TEST LAYERS -->
+  <rect x="32" y="96" width="330" height="330" rx="14" fill="#f8f9fa" stroke="#adb5bd" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="52" y="124" font-size="15" font-weight="700" fill="#495057">tests/  ·  black box, over HTTP only</text>
+
+  <rect x="52" y="140" width="290" height="72" rx="10" fill="#b2f2bb" stroke="#2f9e44" stroke-width="2"/>
+  <text x="68" y="166" font-size="15" font-weight="700" fill="#1e1e1e">unit · Vitest</text>
+  <text x="68" y="188" font-size="13" fill="#2b2b2b">62 tests · money, state machine, validators</text>
+  <text x="68" y="205" font-size="12" fill="#5c940d">&lt; 2s — no HTTP, no browser</text>
+
+  <rect x="52" y="224" width="290" height="72" rx="10" fill="#a5d8ff" stroke="#1971c2" stroke-width="2"/>
+  <text x="68" y="250" font-size="15" font-weight="700" fill="#1e1e1e">api · Playwright request</text>
+  <text x="68" y="272" font-size="13" fill="#2b2b2b">32 tests · authz, IDOR, pagination, races</text>
+  <text x="68" y="289" font-size="12" fill="#1864ab">worker-scoped tenants — fully parallel</text>
+
+  <rect x="52" y="308" width="290" height="72" rx="10" fill="#d0bfff" stroke="#6741d9" stroke-width="2"/>
+  <text x="68" y="334" font-size="15" font-weight="700" fill="#1e1e1e">e2e + a11y · Playwright browser</text>
+  <text x="68" y="356" font-size="13" fill="#2b2b2b">14 tests · journeys only a browser can see</text>
+  <text x="68" y="373" font-size="12" fill="#5f3dc4">storageState per role · axe per screen</text>
+
+  <text x="52" y="404" font-size="12.5" fill="#868e96">Rule: a scenario lives at the fastest layer that can observe its failure.</text>
+
+  <!-- APP -->
+  <rect x="440" y="96" width="300" height="330" rx="14" fill="#f8f9fa" stroke="#adb5bd" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="460" y="124" font-size="15" font-weight="700" fill="#495057">apps/  ·  the app under test</text>
+
+  <rect x="460" y="140" width="260" height="62" rx="10" fill="#ffec99" stroke="#f08c00" stroke-width="2"/>
+  <text x="476" y="164" font-size="14" font-weight="700" fill="#1e1e1e">web · React + Vite</text>
+  <text x="476" y="184" font-size="12.5" fill="#2b2b2b">client generated from the OpenAPI spec</text>
+
+  <rect x="460" y="216" width="260" height="86" rx="10" fill="#ffec99" stroke="#f08c00" stroke-width="2"/>
+  <text x="476" y="240" font-size="14" font-weight="700" fill="#1e1e1e">api · Fastify + TypeBox</text>
+  <text x="476" y="260" font-size="12.5" fill="#2b2b2b">schema per route → validation + types</text>
+  <text x="476" y="277" font-size="12.5" fill="#2b2b2b">+ OpenAPI 3.1 generation</text>
+  <text x="476" y="294" font-size="12" fill="#e8590c">argon2id · JWT · rotating refresh</text>
+
+  <rect x="460" y="316" width="260" height="56" rx="10" fill="#ffffff" stroke="#868e96" stroke-width="2"/>
+  <text x="476" y="340" font-size="14" font-weight="700" fill="#1e1e1e">Postgres 16 (Docker)</text>
+  <text x="476" y="359" font-size="12.5" fill="#2b2b2b">every row tenant-scoped · Drizzle migrations</text>
+
+  <!-- arrows tests -> app -->
+  <path d="M342,260 L455,258" stroke="#1971c2" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)"/>
+  <text x="356" y="250" font-size="11.5" fill="#1971c2">HTTP</text>
+
+  <path d="M342,344 L455,175" stroke="#6741d9" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="360" y="300" font-size="11.5" fill="#6741d9">browser</text>
+
+  <path d="M590,202 L590,212" stroke="#495057" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M590,302 L590,312" stroke="#495057" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- SPEC loop -->
+  <rect x="782" y="176" width="126" height="150" rx="12" fill="#ffc9c9" stroke="#e03131" stroke-width="2"/>
+  <text x="796" y="202" font-size="13.5" font-weight="700" fill="#1e1e1e">openapi.json</text>
+  <text x="796" y="222" font-size="11.5" fill="#2b2b2b">generated</text>
+  <text x="796" y="238" font-size="11.5" fill="#2b2b2b">committed</text>
+  <text x="796" y="254" font-size="11.5" fill="#2b2b2b">diffed in CI</text>
+  <text x="796" y="278" font-size="11.5" fill="#c92a2a">a shape change</text>
+  <text x="796" y="294" font-size="11.5" fill="#c92a2a">breaks the build</text>
+  <text x="796" y="310" font-size="11.5" fill="#c92a2a">and the UI types</text>
+
+  <path d="M722,254 L778,244" stroke="#e03131" stroke-width="2.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M840,176 L840,150 L726,150 L726,166" stroke="#e03131" stroke-width="2.5" fill="none" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+
+  <!-- SEEDED BUGS -->
+  <rect x="32" y="452" width="876" height="118" rx="14" fill="#fff5f5" stroke="#e03131" stroke-width="2"/>
+  <text x="52" y="480" font-size="15" font-weight="700" fill="#c92a2a">Seeded bugs — the suite is tested too</text>
+  <text x="52" y="502" font-size="12.5" fill="#2b2b2b">BUGS=… / VITE_BUGS=… switch on one deliberate defect. The matrix boots the stack per flag and asserts the expected tests fail — and only those.</text>
+
+  <rect x="52" y="516" width="118" height="38" rx="8" fill="#b2f2bb" stroke="#2f9e44" stroke-width="1.5"/>
+  <text x="62" y="534" font-size="11" font-weight="700" fill="#1e1e1e">MONEY_ROUNDING</text>
+  <text x="62" y="548" font-size="10.5" fill="#5c940d">unit</text>
+
+  <rect x="178" y="516" width="100" height="38" rx="8" fill="#b2f2bb" stroke="#2f9e44" stroke-width="1.5"/>
+  <text x="188" y="534" font-size="11" font-weight="700" fill="#1e1e1e">STATE_SKIP</text>
+  <text x="188" y="548" font-size="10.5" fill="#5c940d">unit</text>
+
+  <rect x="286" y="516" width="122" height="38" rx="8" fill="#a5d8ff" stroke="#1971c2" stroke-width="1.5"/>
+  <text x="296" y="534" font-size="11" font-weight="700" fill="#1e1e1e">IDOR_CLAIM_READ</text>
+  <text x="296" y="548" font-size="10.5" fill="#1864ab">api</text>
+
+  <rect x="416" y="516" width="150" height="38" rx="8" fill="#a5d8ff" stroke="#1971c2" stroke-width="1.5"/>
+  <text x="426" y="534" font-size="11" font-weight="700" fill="#1e1e1e">PAGINATION_OFF_BY_ONE</text>
+  <text x="426" y="548" font-size="10.5" fill="#1864ab">api</text>
+
+  <rect x="574" y="516" width="158" height="38" rx="8" fill="#a5d8ff" stroke="#1971c2" stroke-width="1.5"/>
+  <text x="584" y="534" font-size="10.5" font-weight="700" fill="#1e1e1e">RACE_DOUBLE_APPROVE</text>
+  <text x="584" y="548" font-size="10.5" fill="#1864ab">api</text>
+
+  <rect x="740" y="516" width="80" height="38" rx="8" fill="#d0bfff" stroke="#6741d9" stroke-width="1.5"/>
+  <text x="750" y="534" font-size="10.5" font-weight="700" fill="#1e1e1e">UI_STALE</text>
+  <text x="750" y="548" font-size="10.5" fill="#5f3dc4">e2e</text>
+
+  <rect x="828" y="516" width="80" height="38" rx="8" fill="#d0bfff" stroke="#6741d9" stroke-width="1.5"/>
+  <text x="838" y="534" font-size="10.5" font-weight="700" fill="#1e1e1e">A11Y_LABEL</text>
+  <text x="838" y="548" font-size="10.5" fill="#5f3dc4">e2e + axe</text>
+</svg>

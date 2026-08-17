@@ -47,22 +47,13 @@ decisions that actually matter in production automation:
 
 ## Architecture
 
-```mermaid
-flowchart LR
-    subgraph tests/
-        U[unit · Vitest] ; A[api · Playwright request] ; E[e2e · Playwright browser]
-    end
-    subgraph apps/
-        API[Fastify API] --- DB[(Postgres)]
-        WEB[React UI] --> API
-    end
-    U -.pure functions.-> API
-    A -->|HTTP| API
-    E -->|browser| WEB
-```
+<img src="docs/diagrams/system-overview.svg" alt="System overview: three test layers calling the API and UI, the generated OpenAPI spec closing the contract loop, and seven seeded bugs mapped to the layer that catches each" width="100%">
 
 Tests never import app internals — they hit the app over HTTP like a real client.
 The apps are npm workspaces; the test layers are outside consumers.
+
+**→ [The visual guide](docs/visual-guide.md)** walks the whole project in four
+diagrams: system, parallel isolation, auth, and the CI pipeline.
 
 ## Test strategy
 
@@ -106,8 +97,9 @@ Short on time? These five files carry the argument:
 | [`apps/api/src/routes/claims.ts`](apps/api/src/routes/claims.ts) | Schema-per-route (validation + types + OpenAPI), tenant scoping as 404, atomic conditional updates for concurrency |
 | [`.github/workflows/e2e-ci.yml`](.github/workflows/e2e-ci.yml) | Cheap-first fan-out, sharding, blob merge, published report, one required gate |
 
-Then: [architecture](docs/architecture.md) · [ADRs](docs/adr/) ·
-[seeded bugs](docs/seeded-bugs.md) · [triage runbook](docs/triage-runbook.md)
+Then: [visual guide](docs/visual-guide.md) · [architecture](docs/architecture.md) ·
+[ADRs](docs/adr/) · [seeded bugs](docs/seeded-bugs.md) ·
+[triage runbook](docs/triage-runbook.md)
 
 ## Roadmap
 
