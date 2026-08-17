@@ -17,7 +17,7 @@
 test-first domain core, an auth'd API (argon2id, rotating refresh tokens), a React
 UI with a spec-generated typed client, ~110 tests across unit, API, E2E, and a11y
 layers — worker-isolated, running against the containerized app, gated in CI by
-coverage floor, contract drift, and Trivy image scanning — and seven seeded bugs
+coverage floor, contract drift, and Trivy image scanning — and eight seeded bugs
 with a detection matrix proving the suite catches every one. CI hardening is done — sharded jobs, a merged report on Pages,
 and a quality gate that blocks on failures and excess flake. The ephemeral-AWS
 tier is still to come — see the roadmap.
@@ -35,7 +35,7 @@ decisions that actually matter in production automation:
   its failure. No E2E test for anything an API test can see.
 - **Seeded, feature-flagged bugs** — `BUGS=IDOR_CLAIM_READ npm test` and watch exactly
   the right tests fail. The detection matrix runs all seven and asserts each is caught
-  by the expected tests, and only those: **7/7**.
+  by the expected tests, and only those: **8/8**.
 - **Parallel-safe isolation** — worker-scoped tenants, no shared golden data, no
   truncation between tests.
 - **Flake as a first-class concern** — retries are instrumentation, not paint;
@@ -111,7 +111,7 @@ Then: [visual guide](docs/visual-guide.md) · [architecture](docs/architecture.m
 - [x] **P4** — Full API suite: lifecycle, pagination, double-approve race, contract drift gate
 - [x] **P5** — React UI (4 screens), typed client generated from the spec
 - [x] **P6** — E2E journeys (POM, storageState, two-role contexts), axe checks, console-error guard
-- [x] **P7** — Seeded bug flags + detection matrix — 7/7 caught by exactly the expected tests
+- [x] **P7** — Seeded bug flags + detection matrix — 8/8 caught by exactly the expected tests
 - [x] **P8** — CI hardening: 4-way sharding, blob merge, Pages-published report, quality gate, nightly cross-browser
 - [x] **P9** — Docs: architecture guide, 7 ADRs, seeded-bug reference, triage runbook, reviewer's guide
 - [ ] **P10** — Terraform: OIDC, ECR, ephemeral Fargate stack

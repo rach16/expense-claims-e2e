@@ -1,6 +1,6 @@
 # Seeded bugs
 
-Seven deliberate defects, each switchable by env var. The detection matrix
+Eight deliberate defects, each switchable by env var. The detection matrix
 (`npm run test:matrix`) boots the stack once per flag and asserts the expected
 tests fail — **and only those**.
 
@@ -18,11 +18,19 @@ npm run test:matrix                            # all seven, with assertions
 | `PAGINATION_OFF_BY_ONE` | wrong `OFFSET` | API | 3 |
 | `RACE_DOUBLE_APPROVE` | removes the atomic status guard | API | 1 |
 | `UI_STALE_TOTAL` | displayed total never shrinks | E2E | 1 |
-| `A11Y_MISSING_LABEL` | amount input loses its label | E2E + axe | 8 |
+| `NO_TOKEN_REFRESH` | client never spends the refresh cookie on 401 | E2E | 2 |
+| `A11Y_MISSING_LABEL` | amount input loses its label | E2E + axe | 9 |
 
 Five of seven are caught without starting a browser. That is the layering rule
 (*a scenario lives at the fastest layer that can observe its failure*) verified
 empirically rather than asserted in a README.
+
+**`NO_TOKEN_REFRESH` came last, and from manual clicking rather than design.**
+A five-minute access token expired mid-session while I explored the app by hand;
+the UI showed "Save failed" instead of refreshing. No automated test could see
+it — they all run seconds after minting a token. The fix, the two tests that pin
+expiry with a planted dead token, and this flag all landed together so the gap
+cannot reopen.
 
 ## Two findings worth reading
 

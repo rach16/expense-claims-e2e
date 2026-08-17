@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { client } from '../api/client.js'
 import { saveSession, type Role } from '../auth.js'
 
@@ -8,6 +8,9 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  // where the user was headed before their session expired
+  const next = searchParams.get('next')
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
@@ -24,7 +27,7 @@ export function LoginPage() {
       return
     }
     saveSession(login.data.accessToken, me.data.role as Role, me.data.email)
-    navigate('/claims')
+    navigate(next && next.startsWith('/') ? next : '/claims')
   }
 
   return (

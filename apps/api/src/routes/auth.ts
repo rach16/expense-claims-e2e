@@ -23,7 +23,10 @@ export function authRoutes(app: AppInstance): void {
   const cookieOptions = {
     httpOnly: true,
     sameSite: 'strict',
-    path: '/auth',
+    // path '/' rather than '/auth': the browser reaches this API under a
+    // proxy prefix (/api/auth/refresh), which would never match Path=/auth.
+    // Scope is still tight — httpOnly, SameSite=Strict, secure in production.
+    path: '/',
     secure: process.env.NODE_ENV === 'production',
   } as const
 

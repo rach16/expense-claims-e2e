@@ -14,6 +14,10 @@ export function getToken(): string | null {
   return localStorage.getItem('accessToken')
 }
 
+export function setToken(token: string): void {
+  localStorage.setItem('accessToken', token)
+}
+
 export function getRole(): Role | null {
   return localStorage.getItem('role') as Role | null
 }

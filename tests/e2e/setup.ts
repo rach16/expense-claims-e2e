@@ -32,17 +32,25 @@ setup('mint tenant, users, and per-role storage states', async ({ browser }) => 
 
   await mkdir(AUTH_DIR, { recursive: true })
 
-  // storage state per role: login via API (fast), plant the session the way
-  // the app itself stores it, save the browser state for tests to reuse
+  // storage state per role. The login runs INSIDE the browser context, not via
+  // a separate API context — otherwise the httpOnly refresh cookie is set on
+  // the wrong client and the saved state can never survive token expiry.
   for (const role of ['submitter', 'approver', 'admin'] as const) {
-    const login = await api.post('/auth/login', {
-      data: { email: emails[role], password: PASSWORD },
-    })
-    const { accessToken } = (await login.json()) as { accessToken: string }
-
     const context = await browser.newContext({ baseURL: WEB })
     const page = await context.newPage()
     await page.goto('/login')
+
+    const accessToken = await page.evaluate(async (creds) => {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(creds),
+      })
+      const body = (await response.json()) as { accessToken: string }
+      return body.accessToken
+    }, { email: emails[role], password: PASSWORD })
+
     await page.evaluate(
       ([token, r, email]) => {
         localStorage.setItem('accessToken', token!)
@@ -51,6 +59,7 @@ setup('mint tenant, users, and per-role storage states', async ({ browser }) => 
       },
       [accessToken, role, emails[role]],
     )
+    // includes both localStorage and the httpOnly refresh cookie
     await context.storageState({ path: `${AUTH_DIR}/${role}.json` })
     await context.close()
   }

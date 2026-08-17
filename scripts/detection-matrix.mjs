@@ -63,6 +63,19 @@ const MATRIX = [
     expect: ['editing a draft recomputes the total after removing an item'],
   },
   {
+    // found by exploratory testing, not by the suite — this row exists so the
+    // gap cannot reopen silently
+    // the flag disables the whole 401-handling path, so both halves of the
+    // session-expiry contract fail: silent recovery AND the fallback redirect
+    flag: 'NO_TOKEN_REFRESH',
+    where: 'web',
+    layers: ['e2e'],
+    expect: [
+      'recovers silently when the access token has expired',
+      'redirects to login, preserving the destination, when refresh also fails',
+    ],
+  },
+  {
     // the axe test names it explicitly; the functional tests fall over too,
     // because role/label-first locators can't find an unlabelled control —
     // accessibility regressions are functional regressions in this suite
@@ -78,6 +91,7 @@ const MATRIX = [
       'submits a draft for approval',
       'approver approves a submitted claim',
       'rejection reason round-trips to the submitter',
+      'recovers silently when the access token has expired',
     ],
   },
 ]
