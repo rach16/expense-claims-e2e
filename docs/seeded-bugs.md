@@ -7,7 +7,7 @@ tests fail — **and only those**.
 ```bash
 BUGS=IDOR_CLAIM_READ npm run test:api          # API-side defects
 VITE_BUGS=UI_STALE_TOTAL npm run test:e2e      # UI-side defects
-npm run test:matrix                            # all seven, with assertions
+npm run test:matrix                            # all eight, with assertions
 ```
 
 | Flag | Defect | Layer that catches it | Tests |
@@ -21,7 +21,7 @@ npm run test:matrix                            # all seven, with assertions
 | `NO_TOKEN_REFRESH` | client never spends the refresh cookie on 401 | E2E | 2 |
 | `A11Y_MISSING_LABEL` | amount input loses its label | E2E + axe | 9 |
 
-Five of seven are caught without starting a browser. That is the layering rule
+Five of the eight are caught without starting a browser. That is the layering rule
 (*a scenario lives at the fastest layer that can observe its failure*) verified
 empirically rather than asserted in a README.
 

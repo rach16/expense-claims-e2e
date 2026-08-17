@@ -34,7 +34,7 @@ decisions that actually matter in production automation:
 - **Layered testing** — every scenario lives at the *fastest* layer that can observe
   its failure. No E2E test for anything an API test can see.
 - **Seeded, feature-flagged bugs** — `BUGS=IDOR_CLAIM_READ npm test` and watch exactly
-  the right tests fail. The detection matrix runs all seven and asserts each is caught
+  the right tests fail. The detection matrix runs all eight and asserts each is caught
   by the expected tests, and only those: **8/8**.
 - **Parallel-safe isolation** — worker-scoped tenants, no shared golden data, no
   truncation between tests.
@@ -47,7 +47,7 @@ decisions that actually matter in production automation:
 
 ## Architecture
 
-![System overview: three test layers calling the API and UI, the generated OpenAPI spec closing the contract loop, and seven seeded bugs mapped to the layer that catches each](docs/diagrams/system-overview.svg)
+![System overview: three test layers calling the API and UI, the generated OpenAPI spec closing the contract loop, and the seeded bugs mapped to the layer that catches each](docs/diagrams/system-overview.svg)
 
 Tests never import app internals — they hit the app over HTTP like a real client.
 The apps are npm workspaces; the test layers are outside consumers.
@@ -80,7 +80,7 @@ npm test                       # typecheck → unit → api → e2e, cheapest fi
 Other entry points:
 
 ```bash
-npm run test:matrix            # prove the suite catches all 7 seeded bugs
+npm run test:matrix            # prove the suite catches all 8 seeded bugs
 docker compose --profile app up   # run the API from its production image
 BUGS=IDOR_CLAIM_READ npm run test:api   # watch the authz tests catch a planted bug
 ```
