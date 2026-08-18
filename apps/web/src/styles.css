@@ -18,3 +18,19 @@ button.primary { background: #1a1a2e; color: #fff; border: none; }
 [role='alert'] { color: #b00020; margin: 0.5rem 0; }
 .status { text-transform: capitalize; }
 .actions { display: flex; gap: 0.5rem; }
+
+/* Narrow viewports: the item row and table actions used to overlap, letting an
+   input sit on top of the Remove button. Caught by the nightly mobile project —
+   Playwright refuses to click an element another element is covering. */
+.item-row { flex-wrap: wrap; }
+label { min-width: 0; }
+input { max-width: 100%; box-sizing: border-box; }
+.actions { flex-wrap: wrap; }
+th, td { word-break: break-word; }
+
+@media (max-width: 640px) {
+  main { margin: 1rem auto; }
+  .item-row { gap: 0.4rem; }
+  .item-row > label { flex: 1 1 100%; }
+  .actions > * { flex: 1 1 auto; }
+}
